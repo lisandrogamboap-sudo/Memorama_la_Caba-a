@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memorama - Hamburguesas La Cabaña</title>
+    <style>
+        :root {
+            --primary-color: #ff6600; /* Naranja característico */
+            --secondary-color: #ffe600; /* Amarillo cálido */
+            --dark-color: #1e1e1e; /* Fondo oscuro elegante estilo POS */
+            --light-color: #121212; /* Fondo general de la página */
+            --card-back: #2c2c2c;
+            --text-color: #f7f7f7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 8px;
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            margin: 5px 0;
+            font-size: 1.4rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        p.subtitle {
+            margin: 0;
+            color: #b0b0b0;
+            font-size: 0.8rem;
+        }
+
+        /* Controles superiores (Música y 50/50) */
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 380px;
+            margin-bottom: 8px;
+        }
+
+        .control-btn {
+            background: #2a2a2a;
+            border: 1px solid var(--secondary-color);
+            color: var(--secondary-color);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Banner de Promoción */
+        .promo-banner {
+            background: #2a2a2a;
+            border: 2px dashed var(--secondary-color);
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .promo-banner span {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-weight: bold;
+            display: block;
+        }
+
+        .promo-banner p {
+            margin: 3px 0 0 0;
+            font-size: 0.75rem;
+            color: #fff;
+        }
+
+        .scoreboard {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--secondary-color);
+        }
+
+        /* Tablero dinámico */
+        .memory-game {
+            width: 100%;
+            max-width: 380px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            perspective: 1000px;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-radius: 6px;
+        }
+
+        .memory-card.flip {
+            transform: rotateY(180deg);
+        }
+
+        .face-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 1.8rem;
+            user-select: none;
+        }
+
+        .front-face {
+            background-color: #ffffff;
+            transform: rotateY(180deg);
+            border: 2px solid var(--primary-color);
+        }
+
+        .back-face {
+            background-color: var(--card-back);
+            color: var(--secondary-color);
+            border: 2px solid var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        /* Modales */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: var(--dark-color);
+            border: 2px solid var(--primary-color);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 330px;
+            width: 100%;
+            box-shadow: 0 5px 20px rgba(255,102,0,0.3);
+            animation: popUp 0.3s ease-in-out;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 1.3rem;
+        }
+
+        .discount-badge {
+            background: #2a2a2a;
+            border: 2px dashed var(--secondary-color);
+            padding: 12px 8px;
+            margin: 12px 0;
+            border-radius: 8px;
+            color: var(--secondary-color);
+            line-height: 1.3;
+        }
+
+        .discount-badge .highlight {
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .discount-badge .condition {
+            font-size: 0.85rem;
+            color: #fff;
+            font-weight: normal;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-action {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 9px 15px;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            flex: 1;
+            transition: opacity 0.2s;
+        }
+
+        .btn-action.secondary {
+            background-color: #333;
+            border: 1px solid #555;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="top-controls">
+            <button class="control-btn" id="soundToggle" onclick="toggleAudio()">🔇 Música</button>
+            <button class="control-btn" id="fiftyBtn" onclick="openFiftyModal()">⚡ Usar 50/50 (5%)</button>
+        </div>
+        <h1>Hamburguesas La Cabaña</h1>
+        <p class="subtitle" id="gameSubtitle">¡Encuentra las 12 parejas en máximo 6 fallos!</p>
+    </header>
+
+    <!-- Banner de Promoción -->
+    <div class="promo-banner" id="promoBanner">
+        <span id="promoTitle">🎉 ¡Promoción Activa Hoy!</span>
+        <p id="promoText">Gana 10% de descuento (o usa 50/50 para ganar 5%) en compras mayores a $30.000.</p>
+    </div>
+
+    <div class="scoreboard">
+        <div>Fallos: <span id="attempts">0</span> / <span id="maxAttemptsText">6</span></div>
+        <div>Parejas: <span id="matches">0</span> / <span id="totalPairsText">12</span></div>
+    </div>
+
+    <!-- Contenedor del Juego -->
+    <div class="memory-game" id="memoryGame"></div>
+
+    <!-- Modal de Confirmación 50/50 -->
+    <div class="modal" id="fiftyModal">
+        <div class="modal-content">
+            <h2 style="color: var(--secondary-color);">¿Activar Modo 50/50?</h2>
+            <p style="color: #b0b0b0; font-size: 0.85rem; margin-bottom: 10px;">El tablero se reducirá a 6 parejas (máximo 3 fallos) y tu premio cambiará al **5% de descuento**.</p>
+            <div class="modal-buttons">
+                <button class="btn-action secondary" onclick="closeFiftyModal()">Cancelar</button>
+                <button class="btn-action" onclick="confirmFiftyFifty()">Sí, activar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Victoria -->
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <h2 style="color: var(--secondary-color);">¡Felicitaciones! 🎉</h2>
+            <p style="margin: 5px 0; font-size: 0.85rem; color: #b0b0b0;">¡Superaste el reto de La Cabaña!</p>
+            <div class="discount-badge" id="winDiscountBox">
+                <span class="highlight">10% DE DESCUENTO</span>
+                <span class="condition">para tu próxima compra por compras mayores a $30.000</span>
+            </div>
+            <p style="font-size: 0.75rem; color: #b0b0b0; margin-bottom: 12px;" id="winMessageBox">Muestra esta pantalla en caja para hacer válido tu beneficio hoy.</p>
+            <button class="btn-action" style="width: 100%;" onclick="restartGame()">Jugar de nuevo</button>
+        </div>
+    </div>
+
+    <!-- Modal de Derrota -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-color);">¡Se acabaron los intentos! ❌</h2>
+            <p style="color: #b0b0b0; margin-bottom: 15px; font-size: 0.9rem;">Llegaste al límite de fallos. ¡Inténtalo de nuevo!</p>
+            <button class="btn-action" style="width: 100%;" onclick="restartGame()">Volver a intentar</button>
+        </div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('memoryGame');
+        const attemptsDisplay = document.getElementById('attempts');
+        const maxAttemptsText = document.getElementById('maxAttemptsText');
+        const matchesDisplay = document.getElementById('matches');
+        const totalPairsText = document.getElementById('totalPairsText');
+        const winModal = document.getElementById('winModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const fiftyModal = document.getElementById('fiftyModal');
+        const promoTitle = document.getElementById('promoTitle');
+        const promoText = document.getElementById('promoText');
+        const winDiscountBox = document.getElementById('winDiscountBox');
+        const winMessageBox = document.getElementById('winMessageBox');
+        const soundToggleBtn = document.getElementById('soundToggle');
+        const fiftyBtn = document.getElementById('fiftyBtn');
+        const gameSubtitle = document.getElementById('gameSubtitle');
+
+        // Validar el día de la semana (1 = Lunes, 3 = Miércoles)
+        const today = new Date().getDay(); 
+        const isPromoDay = (today === 1 || today === 3);
+
+        if (isPromoDay) {
+            promoTitle.textContent = "🎉 ¡Promoción Activa Hoy!";
+            promoText.textContent = "Gana 10% de descuento (o usa 50/50 para ganar 5%) en compras mayores a $30.000.";
+        } else {
+            promoTitle.textContent = "ℹ️ Aviso de Promoción";
+            promoText.textContent = "El descuento del 10% o 5% aplica exclusivamente los lunes y miércoles.";
+        }
+
+        // --- SISTEMA DE AUDIO (Efectos 8-bit + Música de fondo clásica) ---
+        let audioCtx = null;
+        let isMusicPlaying = false;
+        let musicInterval = null;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playRetroSound(frequency, duration, type = 'square') {
+            try {
+                initAudioContext();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function soundFlip() { 
+            playRetroSound(300, 0.08); 
+        }
+
+        function soundMatch() { 
+            playRetroSound(440, 0.08);
+            setTimeout(() => playRetroSound(554.37, 0.08), 80);
+            setTimeout(() => playRetroSound(659.25, 0.15), 160);
+        }
+
+        function soundError() { 
+            playRetroSound(150, 0.15, 'sawtooth');
+            setTimeout(() => playRetroSound(100, 0.2, 'sawtooth'), 120);
+        }
+
+        function startBGM() {
+            if (isMusicPlaying) return;
+            initAudioContext();
+            isMusicPlaying = true;
+            soundToggleBtn.textContent = "🔊 Música";
+
+            const classicMelody = [
+                330, 330, 0, 330, 0, 261, 330, 0, 392, 0, 0, 0, 196, 0, 0, 0,
+                261, 0, 0, 196, 0, 0, 164, 0, 0, 220, 0, 246, 0, 233, 220, 0
+            ];
+            let index = 0;
+
+            musicInterval = setInterval(() => {
+                if (!isMusicPlaying) return;
+                try {
+                    let freq = classicMelody[index];
+                    if (freq > 0) {
+                        let osc = audioCtx.createOscillator();
+                        let gain = audioCtx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.value = freq;
+                        
+                        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
+                        
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.12);
+                    }
+                } catch(e) {}
+                index = (index + 1) % classicMelody.length;
+            }, 140);
+        }
+
+        function stopBGM() {
+            isMusicPlaying = false;
+            clearInterval(musicInterval);
+            soundToggleBtn.textContent = "🔇 Música";
+        }
+
+        function toggleAudio() {
+            if (isMusicPlaying) { 
+                stopBGM(); 
+            } else { 
+                startBGM(); 
+            }
+        }
+
+        // Datos del juego
+        const allItems = [
+            { name: 'hamburguesa', icon: '🍔' },
+            { name: 'salchipapa', icon: '🍟' },
+            { name: 'carne', icon: '🥩' },
+            { name: 'pan', icon: '🍞' },
+            { name: 'gaseosa', icon: '🥤' },
+            { name: 'maicitos', icon: '🌽' },
+            { name: 'lechuga', icon: '🥬' },
+            { name: 'tomate', icon: '🍅' },
+            { name: 'pepino', icon: '🥒' },
+            { name: 'jugo', icon: '🧃' },
+            { name: 'papas', icon: '🥔' },
+            { name: 'fuego', icon: '🔥' }
+        ];
+
+        let activeItems = [];
+        let cards = [];
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+        let attempts = 0;
+        let maxAttempts = 6; // Proporcional por defecto
+        let matches = 0;
+        let isMode5050 = false;
+
+        function initGame(mode50 = false) {
+            isMode5050 = mode50;
+            gameContainer.innerHTML = '';
+            attempts = 0;
+            matches = 0;
+            attemptsDisplay.textContent = attempts;
+            matchesDisplay.textContent = matches;
+            winModal.style.display = 'none';
+            gameOverModal.style.display = 'none';
+            fiftyModal.style.display = 'none';
+
+            if (isMode5050) {
+                activeItems = allItems.slice(0, 6);
+                maxAttempts = 3; // 3 fallos para 6 parejas
+                totalPairsText.textContent = "6";
+                maxAttemptsText.textContent = "3";
+                gameSubtitle.textContent = "¡Modo 50/50 Activado! Encuentra las 6 parejas.";
+                fiftyBtn.disabled = true;
+                fiftyBtn.style.opacity = "0.3";
+            } else {
+                activeItems = [...allItems];
+                maxAttempts = 6; // 6 fallos para 12 parejas
+                totalPairsText.textContent = "12";
+                maxAttemptsText.textContent = "6";
+                gameSubtitle.textContent = "¡Encuentra las 12 parejas en máximo 6 fallos!";
+                fiftyBtn.disabled = false;
+                fiftyBtn.style.opacity = "1";
+            }
+
+            cards = [...activeItems, ...activeItems];
+            cards.sort(() => Math.random() - 0.5);
+
+            cards.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('memory-card');
+                card.dataset.name = item.name;
+
+                card.innerHTML = `
+                    <div class="face-card front-face">${item.icon}</div>
+                    <div class="face-card back-face">🏠</div>
+                `;
+
+                card.addEventListener('click', flipCard);
+                gameContainer.appendChild(card);
+            });
+        }
+
+        function openFiftyModal() {
+            fiftyModal.style.display = 'flex';
+        }
+
+        function closeFiftyModal() {
+            fiftyModal.style.display = 'none';
+        }
+
+        function confirmFiftyFifty() {
+            closeFiftyModal();
+            initGame(true);
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            soundFlip();
+            this.classList.add('flip');
+
+            if (!hasFlippedCard) {
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.name === secondCard.dataset.name;
+
+            if (isMatch) {
+                soundMatch();
+                disableCards();
+            } else {
+                soundError();
+                unflipCards();
+                attempts++;
+                attemptsDisplay.textContent = attempts;
+
+                if (attempts >= maxAttempts) {
+                    setTimeout(() => {
+                        gameOverModal.style.display = 'flex';
+                    }, 600);
+                }
+            }
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+
+            matches++;
+            matchesDisplay.textContent = matches;
+
+            resetBoard();
+
+            if (matches === activeItems.length) {
+                setTimeout(() => {
+                    if (isPromoDay) {
+                        winDiscountBox.style.display = "block";
+                        let discountText = isMode5050 ? "5% DE DESCUENTO" : "10% DE DESCUENTO";
+                        winDiscountBox.innerHTML = `
+                            <span class="highlight">${discountText}</span>
+                            <span class="condition">para tu próxima compra por compras mayores a $30.000</span>
+                        `;
+                        winMessageBox.textContent = "Muestra esta pantalla en caja para hacer válido tu beneficio hoy.";
+                    } else {
+                        winDiscountBox.innerHTML = `
+                            <span class="highlight">¡Juego Completado!</span>
+                            <span class="condition">Hoy no hay descuento activo (aplica lunes y miércoles).</span>
+                        `;
+                        winMessageBox.textContent = "¡Gracias por jugar! Te esperamos el próximo lunes o miércoles.";
+                    }
+                    winModal.style.display = 'flex';
+                }, 500);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+
+            setTimeout(() => {
+                firstCard.classList.remove('flip');
+                secondCard.classList.remove('flip');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+
+        // Iniciar juego normal por defecto
+        initGame(false);
+
+        function restartGame() {
+            initGame(false);
+        }
+    </script>
+</body>
+</html>
